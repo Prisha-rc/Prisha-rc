@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prisha Roy Chaudhuri — Portfolio</title>
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fdf5f7;
+      --bg-alt: #fce8ee;
+      --text: #2d141c;
+      --text-muted: #855b66;
+      --accent: #d64066;
+      --border: #f7d2dc;
+      --serif: 'Playfair Display', serif;
+            --sans: 'Inter', sans-serif;
+    }
+    body[data-theme="midnight"] {
+      --bg: #1a0b12; --bg-alt: #240f19; --text: #ffb3c6; --text-muted: #d68a9e; --accent: #ff0055; --border: #4a1f30;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; cursor: none; }
+    ::-webkit-scrollbar { display: none; }
+
+    .cursor, .cursor-follower {
+      position: fixed; top: 0; left: 0; pointer-events: none; border-radius: 50%;
+      z-index: 99999; transform: translate(-50%, -50%);
+    }
+    .cursor { width: 8px; height: 8px; background: var(--accent); }
+    .cursor-follower { width: 40px; height: 40px; border: 1px solid var(--accent); transition: width 0.3s, height 0.3s; }
+
+        #webgl-canvas { position: fixed; top: 0; left: 0; z-index: -1; width: 100vw; height: 100vh; opacity: 1; }
+
+    .section { padding: 120px 10vw; position: relative; z-index: 1; }
+    h1, h2, h3, h4 { font-family: var(--serif); font-weight: 400; }
+    h2 { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 3rem; color: var(--text); line-height: 1.1; }
+    h2 em { font-style: italic; color: var(--accent); }
+    p { font-size: 1.1rem; line-height: 1.7; color: var(--text-muted); }
+    a { color: var(--text); text-decoration: none; cursor: none; }
+
+        .logo { position: fixed; top: 30px; left: 10vw; font-family: var(--serif); font-size: 1.5rem; font-weight: 700; color: var(--text); z-index: 100; text-decoration: none; }
+    .floating-nav { position: fixed; right: 40px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 20px; z-index: 100; }
+    .nav-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--accent); position: relative; transition: all 0.3s; text-decoration: none; display: block; }
+    .nav-dot.active { background: var(--accent); transform: scale(1.3); }
+    .nav-label { position: absolute; right: 25px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--text); opacity: 0; pointer-events: none; transition: opacity 0.3s; text-transform: uppercase; letter-spacing: 0.15em; white-space: nowrap; }
+    .nav-dot:hover .nav-label { opacity: 1; }
+
+    .hero { height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; }
+    .hero h1 { font-size: clamp(4rem, 10vw, 9rem); line-height: 0.9; letter-spacing: -0.02em; }
+    .hero h1 em { font-style: italic; color: var(--accent); }
+    .hero p { margin-top: 2rem; text-transform: uppercase; letter-spacing: 0.2em; font-size: 1rem; color: var(--text-muted); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; }
+        .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 20px 40px rgba(214,64,102,0.05); margin-bottom: 24px; transition: transform 0.4s ease, background 0.4s; overflow: hidden; position: relative; }
+    .card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(214,64,102,0.08) 0%, transparent 60%); z-index: -1; pointer-events: none; }
+    .card:hover { transform: translateY(-5px); }
+    .card h3 { font-size: 1.6rem; margin-bottom: 10px; color: var(--text); }
+    .card h4 { font-size: 1.2rem; margin-bottom: 5px; color: var(--text); font-family: var(--sans); font-weight: 500; }
+    .card .date { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 15px; display: block; font-weight: 500; }
+    
+    .skills-flex { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    .skills-flex span { padding: 10px 18px; border: 1px solid var(--border); border-radius: 30px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); background: rgba(255,255,255,0.4); }
+
+    .projects-wrapper { height: 400vh; position: relative; background: var(--bg-alt); }
+    .projects-sticky { position: sticky; top: 0; height: 100vh; overflow: hidden; display: flex; align-items: center; }
+    .projects-container { display: flex; width: 400vw; height: 100%; }
+        .slide { width: 100vw; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
+    
+    .slide-img-wrap { width: 45vw; height: 70vh; overflow: hidden; position: relative; transform: translateX(-10vw); cursor: pointer; }
+    .slide-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: filter 0.4s; }
+    .slide-img-wrap::after, #photo-section .reveal::after { content: ''; position: absolute; inset: 0; background: var(--accent); mix-blend-mode: color; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
+    .slide-img-wrap:hover::after, #photo-section .reveal:hover::after { opacity: 0.4; }
+    .liquid-hover { filter: url('#liquid'); }
+
+    .slide-content { position: absolute; right: 12vw; top: 50%; transform: translateY(-50%); width: 35vw; background: rgba(255,255,255,0.95); padding: 80px 60px; box-shadow: 0 20px 40px rgba(0,0,0,0.03); pointer-events: none; z-index: 2; }
+    .slide-content h3 { font-size: clamp(2rem, 3.5vw, 3rem); margin-bottom: 1.5rem; line-height: 1.1; color: var(--text); }
+    .slide-content p { font-size: 1.05rem; margin-bottom: 2.5rem; color: var(--text-muted); }
+    
+    .slide-tags { display: flex; gap: 10px; flex-wrap: wrap; }
+    .slide-tags span { padding: 6px 14px; border: 1px solid var(--border); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+
+    footer { padding: 80px 10vw; text-align: center; border-top: 1px solid var(--border); background: var(--bg); }
+    footer a { font-size: 2rem; font-family: var(--serif); margin: 0 15px; transition: color 0.3s; }
+    footer a:hover { color: var(--accent); }
+    .footer-copy { margin-top: 40px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+
+    .reveal { opacity: 0; transform: translateY(40px); }
+
+    @media (max-width: 900px) {
+      .grid-2 { grid-template-columns: 1fr; gap: 40px; }
+      .slide { flex-direction: column-reverse; text-align: center; gap: 3vw; }
+      .slide-content { width: 100%; }
+      .slide-tags { justify-content: center; }
+      .slide-img-wrap { width: 100%; height: 40vh; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <svg style="width:0;height:0;position:absolute;z-index:-1;">
+    <filter id="liquid">
+      <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="1" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" id="liquid-displace" />
+    </filter>
+  </svg>
+  <div id="welcome-screen" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg); z-index: 10000; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+    <h1 style="font-family: var(--serif); font-size: clamp(3rem, 6vw, 6rem); color: var(--text);">Welcome.</h1>
+  </div>
+
+  <div class="cursor"></div>
+  <div class="cursor-follower"></div>
+  <canvas id="webgl-canvas"></canvas>
+
+        <a href="#" class="logo">PRC.</a>
+  <a href="#" id="theme-toggle" style="position: fixed; top: 30px; right: 40px; font-size: 1.5rem; z-index: 100; text-decoration: none; color: var(--text); transition: color 0.3s;">☾</a>
+  
+  <nav class="floating-nav">
+    <a href="#hero" class="nav-dot active"><span class="nav-label">Home</span></a>
+    <a href="#about" class="nav-dot"><span class="nav-label">About</span></a>
+    <a href="#experience" class="nav-dot"><span class="nav-label">Experience</span></a>
+    <a href="#projects" class="nav-dot"><span class="nav-label">Projects</span></a>
+    <a href="#contact" class="nav-dot"><span class="nav-label">Contact</span></a>
+  </nav>
+
+    <section class="hero">
+    <!-- SVG Rose Animation Overlay -->
+    <div style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; opacity: 0.25;">
+      <svg viewBox="0 0 100 100" style="width: 70vh; height: 70vh;">
+        <path class="rose-path" fill="none" stroke="var(--accent)" stroke-width="0.3" stroke-linecap="round" stroke-linejoin="round" style="stroke-dasharray: 100; stroke-dashoffset: 100;" pathLength="100" d="M49.6,35.8c-1.3,0.3-3.4,0.3-4.3,1.6c-0.6,1-0.2,2.4,0.6,3.1c1.3,1.3,3.4,1.1,5.1,1.1c1.4,0,3.1-0.1,4.1-1.3 c1.1-1.3,0.3-3.4-0.9-4.3C52.8,35.1,50.9,35.3,49.6,35.8z M51.9,31.7c-2.4-0.6-5.4,0.3-6.9,2.4c-1.3,1.9-0.8,4.6,0.8,6.1 c2.2,2.2,5.8,1.9,8.7,1.9c2.4,0,5.3-0.2,7-2.2c1.9-2.2,0.5-5.8-1.5-7.3C57.4,30.5,54.2,30.8,51.9,31.7z M48.1,28.2 c-3.5-0.9-7.9,0.4-10,3.5c-1.9,2.8-1.1,6.7,1.1,8.9c3.2,3.2,8.4,2.8,12.7,2.8c3.5,0,7.7-0.3,10.2-3.2c2.8-3.2,0.7-8.4-2.2-10.6 C56.1,26.4,51.4,26.9,48.1,28.2z M45,26c-4.4-1.1-9.9,0.5-12.5,4.4c-2.4,3.5-1.4,8.4,1.4,11.1C37.9,45.5,44.4,45,49.8,45 c4.4,0,9.6-0.4,12.8-4c3.5-4,0.9-10.5-2.8-13.3C55,23.8,49.1,24.4,45,26z M49.9,49.3c-0.2,7.3-2.9,14.6-8.7,19.3 c-1.6,1.3-3.4,2.4-5.2,3.3 M48.5,59.5c4.7-0.9,9.4-2.7,12.9-6.2c1.8-1.8,3.3-3.9,4.4-6.2"/>
+      </svg>
+    </div>
+  
+    <div>
+      <h1 class="reveal">Prisha<br><em>Roy</em><br>Chaudhuri</h1>
+      <p class="reveal">B.Tech (IoT) Student & Researcher</p>
+    </div>
+  </section>
+
+  <section id="about" class="section">
+    <div class="grid-2">
+      <div class="reveal">
+        <h2>Analytical.<br><em>Curious.</em><br>Building.</h2>
+        <p style="margin-bottom: 20px;">Motivated B.Tech student specialising in Internet of Things, with hands-on experience in IoT prototyping, Python development, and research-driven engineering.</p>
+        <p>Currently contributing to AI-based AQI research, animal tracking systems, and blockchain traceability — all while pursuing certifications in cloud and data analytics.</p>
+        <div class="skills-flex">
+          <span>Python</span><span>C programming</span><span>Java</span><span>Arduino</span><span>Raspberry Pi</span><span>Git</span><span>MATLAB</span><span>SQL</span>
+        </div>
+      </div>
+      <div class="reveal">
+        <div class="card">
+          <span class="date">2024 - 2028</span>
+          <h3>B.Tech CSE (IoT)</h3>
+          <p>University of Engineering and Management, Kolkata<br>CGPA: 8.56</p>
+        </div>
+        <div class="card">
+          <span class="date">2024 & 2022</span>
+          <h3>XII & X (CBSE)</h3>
+          <p>Kendriya Vidyalaya Sangathan No-2 Salt Lake<br>XII: 76.2% | X: 93.8%</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="experience" class="section">
+    <h2 class="reveal">Experience &<br><em>Recognition</em></h2>
+    <div class="grid-2">
+      <div>
+        <div class="card reveal">
+          <span class="date">2025 - Present</span>
+          <h3>IoT Research Intern</h3>
+          <h4>IEDC Lab, UEM Kolkata</h4>
+          <p>UV spectroscopy-based nanomaterial research and AQI prediction model. Digital twinning models and Raspberry Pi-based IoT prototypes.</p>
+        </div>
+        <div class="card reveal">
+          <span class="date">2024-Present</span>
+          <h3>Core Member</h3>
+          <h4>SPIE Optica Student Chapter</h4>
+          <p>Organized technical events, assisted in workshops, coordinated participant logistics, led membership drives, contributed to poster design, and served as an event judge.</p>
+        </div>
+        <div class="card reveal">
+          <span class="date">2025-Present</span>
+          <h3>Core Member</h3>
+          <h4>Microsoft Student Society</h4>
+          <p>Organized technical events, managed social media operations, assisted in workshops, and earned the title of Best Working Member.</p>
+        </div>
+        <div class="card reveal">
+          <span class="date">2025-Present</span>
+          <h3>Membership Development Officer</h3>
+          <h4>IEEE CIS Student Chapter</h4>
+          <p>Coordinated workshops and efficiently managed logistics to ensure smooth event execution.</p>
+        </div>
+      </div>
+      <div>
+        <div class="card reveal" style="background: rgba(214,64,102,0.05); border-color: rgba(214,64,102,0.2);">
+          <span class="date">Publication</span>
+          <h3>AI-Based AQI Classification & Mitigation</h3>
+          <p>Co-authored and secured acceptance at the Advanced Conference on Materials Science, Jadavpur University.</p>
+        </div>
+        <div class="card reveal">
+          <span class="date">Hackathons</span>
+          <h3>Smart India & Indian Innovates</h3>
+          <p>Selected for two internal rounds of SIH 2025 and Finalist in Indian Innovates Hackathon 2026.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="projects" class="projects-wrapper">
+    <div class="projects-sticky">
+      <div class="projects-container">
+
+        <div class="slide">
+          <div class="slide-content">
+            <h3>AgriChain Traceability</h3>
+            <p>Developing a robust traceability model for agricultural supply chains leveraging Blockchain technology.</p>
+            <div class="slide-tags"><span>Blockchain</span><span>IoT</span><span>AI ML</span></div>
+          </div>
+          <div class="slide-img-wrap"><img src="https://images.unsplash.com/photo-1602615576820-ea14cf3e476a?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Project 2"></div>
+        </div>
+
+        <div class="slide">
+          <div class="slide-content">
+            <h3>Digital Twin & AQI Predictor</h3>
+            <p>Python model predicting air quality from sensor data and built simulation models for IoT systems.</p>
+            <div class="slide-tags"><span>Python</span><span>IoT</span><span>AI ML</span><span>Raspberry Pi
+            </span></div>
+          </div>
+          <div class="slide-img-wrap"><img src="https://plus.unsplash.com/premium_vector-1689096811839-56e58bd0c120?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Project 3"></div>
+        </div>
+
+        <div class="slide">
+          <div class="slide-content">
+            <h3>Animal Railway Safety System</h3>
+            <p>Raspberry Pi setup to detect animals near tracks and alert authorities to prevent accidents.</p>
+            <div class="slide-tags"><span>Raspberry Pi</span><span>Python</span><span>IoT</span></div>
+          </div>
+          <div class="slide-img-wrap"><img src="https://plus.unsplash.com/premium_vector-1689096811839-56e58bd0c120?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Project 1"></div>
+        </div>
+
+        
+      </div>
+    </div>
+  </section>
+
+  <section id="photo-section" class="section" style="text-align: center; padding: 120px 10vw;">
+    <h2 class="reveal">Behind the <em>Code</em></h2>
+    <div class="reveal" style="max-width: 600px; margin: 0 auto; border-radius: 24px; overflow: hidden; box-shadow: 0 30px 60px rgba(214,64,102,0.15);">
+      <img src="IMG-20260327-WA0036(1).jpg" alt="Prisha Roy Chaudhuri" style="width: 100%; height: auto; display: block; filter: grayscale(20%); transition: filter 0.3s;" onmouseover="this.style.filter='grayscale(0%)'" onmouseout="this.style.filter='grayscale(20%)'">
+    </div>
+  </section>
+
+  <footer id="contact">
+    <h2 class="reveal">Let's <em>Connect</em></h2>
+    <div class="reveal" style="margin-bottom: 40px;">
+      <a href="mailto:prisharoychaudhuri@gmail.com">Email</a>
+      <a href="https://tinyurl.com/LinkedIn-Prisha-Roy-Chaudhuri" target="_blank">LinkedIn</a>
+      <a href="https://share.google/YChaQhdMd4KVFa1p4" target="_blank">GitHub</a>
+    </div>
+    <p class="footer-copy reveal">© 2026 Prisha Roy Chaudhuri. All Rights Reserved.</p>
+  </footer>
+
+<!-- Advanced Scrollable Project Modal -->
+  <canvas id="transition-canvas" style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9998; pointer-events:none; opacity:0;"></canvas>
+  
+    <div id="project-modal" data-lenis-prevent style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(253, 245, 247, 0.85); z-index:10000; display:flex; align-items:flex-start; justify-content:center; pointer-events:none; clip-path: inset(0 100% 0 0); filter: blur(10px); overflow-y: auto; padding: 10vh 0; cursor: auto;">
+    <div style="background: #ffffff; width: 60vw; min-height: 80vh; box-shadow: 0 40px 80px rgba(0,0,0,0.08); position:relative; overflow: hidden; border-radius: 4px;">
+      
+      <!-- Close Button -->
+      <button id="close-modal" style="position:absolute; top:30px; right:30px; width: 45px; height: 45px; border-radius: 50%; border:none; background:var(--bg-alt); color:var(--text); cursor:pointer; font-size: 1.2rem; display: flex; align-items:center; justify-content:center; z-index: 10; transition: background 0.3s;">✕</button>
+      
+      <!-- Modal Header Image -->
+      <div id="modal-img" style="width: 100%; height: 45vh; background-color: var(--bg-alt); background-size: cover; background-position: center;"></div>
+      
+      <!-- Modal Content -->
+      <div style="padding: 80px 10%;">
+        <h2 id="modal-title" style="color:var(--text); font-family:var(--serif); font-size:clamp(2.5rem, 4vw, 4rem); margin-bottom:10px; line-height: 1.1;">Title</h2>
+        <h3 id="modal-subtitle" style="color:var(--text-muted); font-family:var(--serif); font-size:1.8rem; font-style:italic; margin-bottom: 40px; font-weight: 300;">Subtitle</h3>
+        
+        <p id="modal-desc" style="color:var(--text); font-family:var(--sans); font-size:1.15rem; line-height:1.8;">Detailed Description</p>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Welcome Screen
+    gsap.to("#welcome-screen", { opacity: 0, duration: 1.2, delay: 1, onComplete: () => document.getElementById("welcome-screen").style.display = "none" });
+
+    // Initialize Lenis
+    const lenis = new Lenis({ duration: 1.2, smooth: true });
+    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+    requestAnimationFrame(raf);
+
+    // Custom Cursor
+    const cursor = document.querySelector('.cursor');
+    const follower = document.querySelector('.cursor-follower');
+    let mx = window.innerWidth/2, my = window.innerHeight/2, fx = mx, fy = my;
+    
+    window.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      cursor.style.transform = `translate(${mx}px, ${my}px)`;
+    });
+    
+    gsap.ticker.add(() => {
+      fx += (mx - fx) * 0.15; fy += (my - fy) * 0.15;
+      follower.style.transform = `translate(${fx}px, ${fy}px)`;
+    });
+
+    document.querySelectorAll('a, .card').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        gsap.to(follower, { width: 60, height: 60, backgroundColor: 'rgba(214,64,102,0.1)', duration: 0.3 });
+      });
+      el.addEventListener('mouseleave', () => {
+        gsap.to(follower, { width: 40, height: 40, backgroundColor: 'transparent', duration: 0.3 });
+      });
+    });
+
+    // WebGL Background
+    const canvas = document.getElementById('webgl-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
+    camera.position.z = 5;
+
+    const geo = new THREE.PlaneGeometry(25, 25, 80, 80);
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: 0xfdf5f7, roughness: 0.2, metalness: 0.1, clearcoat: 0.8, clearcoatRoughness: 0.2
+    });
+    const plane = new THREE.Mesh(geo, mat);
+    plane.rotation.x = -Math.PI / 3;
+    scene.add(plane);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const light1 = new THREE.DirectionalLight(0xffb3c6, 2); 
+    light1.position.set(2, 5, 2); 
+    scene.add(light1);
+    const light2 = new THREE.PointLight(0xd64066, 2.5, 20); 
+    light2.position.set(-2, 1, 2); 
+    scene.add(light2);
+
+        // Photorealistic Organic Floating Petals with Mouse Parallax
+    const petalCount = 80;
+    
+    // 1. Curved Geometry
+    const petalGeo = new THREE.PlaneGeometry(0.3, 0.5, 4, 4);
+    const posP = petalGeo.attributes.position;
+    for(let i = 0; i < posP.count; i++){
+      let x = posP.getX(i), y = posP.getY(i);
+      posP.setZ(i, (x*x + y*y) * 0.4);
+    }
+    petalGeo.computeVertexNormals();
+
+    // 2. Organic Material
+    const petalMat = new THREE.MeshPhysicalMaterial({ 
+      color: 0xff7b9c, 
+      side: THREE.DoubleSide, 
+      transparent: true, 
+      opacity: 0.85, 
+      roughness: 0.15, 
+      metalness: 0.0,
+      clearcoat: 0.5,
+      transmission: 0.4,
+      thickness: 0.1 
+    });
+
+    const petals = new THREE.InstancedMesh(petalGeo, petalMat, petalCount);
+    const dummy = new THREE.Object3D();
+    const petalData = [];
+    
+    for (let i = 0; i < petalCount; i++) {
+      let zDepth = (Math.random() - 0.5) * 15;
+      let scale = zDepth > 3 ? 1.5 + Math.random() : Math.random() * 0.5 + 0.5; 
+      
+      petalData.push({
+        // Scattered globally across the spatial view
+        x: (Math.random() - 0.5) * 30, 
+        y: (Math.random() - 0.5) * 30, 
+        z: zDepth,
+        scale: scale,
+        rx: Math.random() * Math.PI, ry: Math.random() * Math.PI, rz: Math.random() * Math.PI,
+        // Extremely slow drift instead of fast falling
+        vx: (Math.random() - 0.5) * 0.005, 
+        vy: -0.01 - Math.random() * 0.01,
+        vrx: (Math.random() - 0.5) * 0.02, 
+        vry: (Math.random() - 0.5) * 0.02
+      });
+    }
+    scene.add(petals);
+
+    const clock = new THREE.Clock();
+    const posAttr = geo.attributes.position; // For the background plane
+
+    function animateThree() {
+      const t = clock.getElapsedTime() * 0.5;
+      
+      // Animate background fluid plane
+      for(let i=0; i<posAttr.count; i++) {
+        const x = posAttr.getX(i), y = posAttr.getY(i);
+        const z = Math.sin(x*0.5 + t)*0.8 + Math.cos(y*0.5 + t*1.2)*0.8;
+        posAttr.setZ(i, z);
+      }
+      posAttr.needsUpdate = true;
+
+      // 3. Infinite slow drift for petals
+      for (let i = 0; i < petalCount; i++) {
+        const p = petalData[i];
+        
+        p.y += p.vy; 
+        p.x += Math.sin(t + i)*0.005 + p.vx;
+        p.rx += p.vrx; p.ry += p.vry;
+        
+        // Loop back to the opposite side if they drift too far out of bounds
+        if (p.y < -15) p.y = 15;
+        if (p.x > 15) p.x = -15;
+        if (p.x < -15) p.x = 15;
+        
+        dummy.position.set(p.x, p.y, p.z);
+        dummy.rotation.set(p.rx, p.ry, p.rz);
+        dummy.scale.set(p.scale, p.scale, p.scale);
+        dummy.updateMatrix();
+        petals.setMatrixAt(i, dummy.matrix);
+      }
+      petals.instanceMatrix.needsUpdate = true;
+
+      // 4. Mouse Parallax Effect (using 'mx' and 'my' from your custom cursor logic)
+      const normX = (mx / window.innerWidth) * 2 - 1;
+      const normY = -(my / window.innerHeight) * 2 + 1;
+      
+      // Gently tilt and shift the entire field of petals based on mouse position
+      petals.rotation.y += (normX * 0.3 - petals.rotation.y) * 0.05;
+      petals.rotation.x += (normY * 0.3 - petals.rotation.x) * 0.05;
+      petals.position.x += (normX * 1.5 - petals.position.x) * 0.05;
+      petals.position.y += (normY * 1.5 - petals.position.y) * 0.05;
+
+      renderer.render(scene, camera);
+    }
+    gsap.ticker.add(animateThree);
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // GSAP Scroll Animations
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Horizontal Scroll for Projects
+    const slides = gsap.utils.toArray('.slide');
+    gsap.to(slides, {
+      xPercent: -100 * (slides.length - 1),
+      ease: "none",
+      scrollTrigger: {
+        trigger: ".projects-wrapper",
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 1
+      }
+    });
+
+    // Reveal Animations
+    gsap.utils.toArray('.reveal').forEach(el => {
+      gsap.fromTo(el, 
+        { y: 50, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 1.2, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 85%" } }
+      );
+    });
+	
+	    // Midnight Theme Toggle
+    const themeBtn = document.getElementById('theme-toggle');
+    let isMidnight = false;
+    themeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      isMidnight = !isMidnight;
+      document.body.setAttribute('data-theme', isMidnight ? 'midnight' : 'light');
+      themeBtn.innerText = isMidnight ? '☀' : '☾';
+      // Sync WebGL background colors
+      mat.color.setHex(isMidnight ? 0x1a0b12 : 0xfdf5f7);
+      light1.color.setHex(isMidnight ? 0xff0055 : 0xffb3c6);
+    });
+	
+	    // Liquid Warp Hover Effect
+    const filterDisplace = document.querySelector('#liquid-displace');
+    document.querySelectorAll('.slide-img-wrap, #photo-section .reveal').forEach(wrap => {
+      const img = wrap.querySelector('img');
+      if (img) img.classList.add('liquid-hover');
+      wrap.addEventListener('mouseenter', () => gsap.to(filterDisplace, { attr: { scale: 30 }, duration: 0.8, ease: "power2.out" }));
+      wrap.addEventListener('mouseleave', () => gsap.to(filterDisplace, { attr: { scale: 0 }, duration: 0.8, ease: "power2.out" }));
+    });
+	
+	    // Floating Nav Scroll Logic
+    const sections = gsap.utils.toArray('.section, .hero, .projects-wrapper');
+    const navDots = gsap.utils.toArray('.nav-dot');
+    sections.forEach((sec, i) => {
+      ScrollTrigger.create({
+        trigger: sec, start: "top center", end: "bottom center",
+        onToggle: self => { if(self.isActive && navDots[i]) { navDots.forEach(d => d.classList.remove('active')); navDots[i].classList.add('active'); } }
+      });
+    });
+	
+	    // CV Data for Modal
+        // Upgraded CV Data for Editorial Modal
+    const projectData = {
+      1: { 
+        title: "AgriChain", subtitle: "Smart Farming through AI, IoT, Blockchain & Crop Simulation", 
+        desc: "<b>Status: Ongoing</b><br><br>AgriChain is a smart agriculture platform that integrates blockchain, IoT, and AI to create a transparent, secure, and efficient farming supply chain. Using IoT sensors for real-time monitoring, AI for smart analysis and decision-making, and a crop simulation digital twin to predict crop health under different environmental conditions, the system helps improve productivity, traceability, and sustainability from farm to consumer.",
+        img: "https://images.unsplash.com/photo-1602615576820-ea14cf3e476a?q=80&w=1170&auto=format&fit=crop"
+      },
+      2: { 
+        title: "Tufan", subtitle: "Hyperlocal Urban Intelligence for Smarter Cities", 
+        desc: "<b>Status: Ongoing</b><br><br>TUFAN is an intelligent urban monitoring platform that uses IoT, AI, and real-time analytics to predict AQI and road conditions at a hyperlocal level. It helps governments identify pollution hotspots, visualize their spread, and implement targeted mitigation strategies for smarter and healthier cities.",
+        img: "https://plus.unsplash.com/premium_vector-1689096811839-56e58bd0c120?q=80&w=1332&auto=format&fit=crop"
+      },
+      3: { 
+        title: "Animal Railway Safety", subtitle: "AI Powered Animal Guard System with Smart Acoustic Repellent for Railway Tracks", 
+        desc: "<b>Status: 2026</b><br><br>AI Powered Animal Guard System with Smart Acoustic Repellent for Railway Tracks is an intelligent wildlife protection system that uses AI and smart sensors to detect animals near railway tracks and instantly triggers eco-friendly acoustic repellents and alerts to prevent train-animal collisions, ensuring both railway safety and wildlife conservation.",
+        img: "https://plus.unsplash.com/premium_vector-1689096811839-56e58bd0c120?q=80&w=1332&auto=format&fit=crop"
+      }, 
+    };
+
+    // WebGL Petal Burst Setup
+    const transCanvas = document.getElementById('transition-canvas');
+    const transRenderer = new THREE.WebGLRenderer({ canvas: transCanvas, alpha: true });
+    transRenderer.setSize(window.innerWidth, window.innerHeight);
+    const transScene = new THREE.Scene();
+    const transCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+    const petalMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uClickPos: { value: new THREE.Vector2(0.5, 0.5) },
+        uProgress: { value: 0 },
+        uAspect: { value: window.innerWidth / window.innerHeight },
+        uColor: { value: new THREE.Color(0xd64066) } // Pink
+      },
+      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }`,
+      fragmentShader: `
+        uniform float uTime; uniform vec2 uClickPos; uniform float uProgress; uniform float uAspect; uniform vec3 uColor;
+        varying vec2 vUv;
+        void main() {
+          vec2 st = vUv - uClickPos;
+          st.x *= uAspect;
+          float r = length(st);
+          float a = atan(st.y, st.x);
+          // Petal burst math (5 petals)
+          float petal = abs(cos(a * 2.5)) * 0.4 + 0.2;
+          float radius = uProgress * 2.5; 
+          float alpha = smoothstep(petal * radius, (petal * radius) - 0.1, r);
+          gl_FragColor = vec4(uColor, alpha * uProgress);
+        }
+      `,
+      transparent: true
+    });
+    transScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), petalMaterial));
+
+    let transAnimFrame;
+    function animateTrans() {
+      petalMaterial.uniforms.uTime.value += 0.05;
+      transRenderer.render(transScene, transCamera);
+      transAnimFrame = requestAnimationFrame(animateTrans);
+    }
+
+    // Modal Silk Reveal Logic
+    const projModal = document.getElementById('project-modal');
+    document.querySelectorAll('.slide-img-wrap').forEach((wrap, index) => {
+      wrap.addEventListener('click', (e) => {
+        const data = projectData[index + 1];
+        if(!data) return;
+
+        const rect = transCanvas.getBoundingClientRect();
+        petalMaterial.uniforms.uClickPos.value.set((e.clientX - rect.left)/rect.width, 1.0 - ((e.clientY - rect.top)/rect.height));
+        petalMaterial.uniforms.uAspect.value = window.innerWidth / window.innerHeight;
+        
+        transCanvas.style.opacity = 1;
+        animateTrans();
+
+        // 1. Petal Burst WebGL
+        gsap.to(petalMaterial.uniforms.uProgress, { value: 2.0, duration: 1.0, ease: "power2.inOut" });
+
+                // 2. Silk Reveal Modal (Clip-path + Blur)
+        document.getElementById('modal-title').innerText = data.title;
+        document.getElementById('modal-subtitle').innerText = data.subtitle;
+        document.getElementById('modal-desc').innerHTML = data.desc;
+        document.getElementById('modal-img').style.backgroundImage = `url(${data.img})`;
+        projModal.scrollTo(0,0); 
+        projModal.style.pointerEvents = "auto";
+        gsap.to(projModal, { 
+          clipPath: "inset(0 0% 0 0)", filter: "blur(0px)", 
+          duration: 1.2, delay: 0.4, ease: "power4.inOut" 
+        });
+      });
+    });
+
+        document.getElementById('close-modal').addEventListener('click', () => {
+      // Close Silk Reveal
+      gsap.to(projModal, {
+        clipPath: "inset(0 100% 0 0)", filter: "blur(10px)", 
+        duration: 0.8, ease: "power3.inOut",
+        onComplete: () => {
+          projModal.style.pointerEvents = "none";
+          // Reverse Petal Burst
+          gsap.to(petalMaterial.uniforms.uProgress, {
+            value: 0, duration: 0.8, ease: "power2.inOut",
+            onComplete: () => { transCanvas.style.opacity = 0; cancelAnimationFrame(transAnimFrame); }
+          });
+        }
+      });
+    });
+	
+	    // Draw the Rose SVG flawlessly on load
+    gsap.to(".rose-path", { strokeDashoffset: 0, duration: 4.5, ease: "power2.inOut", delay: 0.5 });
+	
+	
+  </script>
+      
+</body>
+</html>
