@@ -1,0 +1,53 @@
+name: Groq Telegram Notification
+
+on:
+  push:
+    branches:
+      - main # Change this if your default branch is named 'master'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process Commit and Send to Telegram
+        env:
+          # Make sure your GitHub secret is renamed to GROQ_API_KEY
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }} 
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          # 1. Extract ONLY the commit message and author from the GitHub event payload
+          COMMIT_MSG=$(jq -r '.head_commit.message' "$GITHUB_EVENT_PATH")
+          AUTHOR=$(jq -r '.head_commit.author.name' "$GITHUB_EVENT_PATH")
+          
+          # 2. Build strict prompts for Groq
+          # This forces the AI to obey your constraints regarding line numbers and code changes
+          SYSTEM_PROMPT="You are a strict assistant formatting GitHub notifications for Telegram. You MUST ONLY read the provided commit message. DO NOT guess, infer, or hallucinate any code changes. ONLY detail code changes if specific line numbers are explicitly mentioned in the commit message text. If no line numbers are mentioned, provide a brief, general summary of the message."
+          USER_PROMPT="Author: $AUTHOR\nCommit Message:\n$COMMIT_MSG"
+          
+          # 3. Create JSON payload for Groq safely using jq
+          AI_PAYLOAD=$(jq -n \
+            --arg model "llama-3.1-8b-instant" \
+            --arg sys "$SYSTEM_PROMPT" \
+            --arg usr "$USER_PROMPT" \
+            '{model: $model, messages: [{role: "system", "content": $sys}, {role: "user", "content": $usr}]}')
+            
+          # 4. Call Groq API
+          AI_RESPONSE=$(curl -s -X POST https://api.groq.com/openai/v1/chat/completions \
+            -H "Authorization: Bearer $GROQ_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$AI_PAYLOAD")
+            
+          # 5. Extract the AI's formatted text
+          AI_MESSAGE=$(echo "$AI_RESPONSE" | jq -r '.choices[0].message.content')
+          
+          # 6. Build Telegram Payload
+          TG_PAYLOAD=$(jq -n \
+            --arg chat_id "$CHAT_ID" \
+            --arg text "$AI_MESSAGE" \
+            '{chat_id: $chat_id, text: $text}')
+            
+          # 7. Send the final message to Telegram
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "$TG_PAYLOAD"
